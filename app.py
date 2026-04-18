@@ -3,12 +3,18 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
-from tensorflow.keras.models import load_model
+
+# --- Conditional TensorFlow Import ---
+try:
+    from tensorflow.keras.models import load_model
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
 
 # Page Configuration
 st.set_page_config(page_title="AutoEye Heart AI", page_icon="❤️", layout="wide")
 
-# Custom Styling for Professional Look
+# Custom Styling
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
@@ -25,15 +31,19 @@ def load_all_models():
     models_dir = 'models'
     
     if os.path.exists(models_dir):
+        # Load Scikit-Learn Models
         for filename in os.listdir(models_dir):
-            if filename.endswith('.joblib'):
+            if filename.endswith('.joblib') and filename != 'scaler.joblib':
                 name = filename.replace('.joblib', '').replace('_', ' ').title()
                 models[name] = joblib.load(os.path.join(models_dir, filename))
         
-        lstm_path = os.path.join(models_dir, 'lstm_model.h5')
-        if os.path.exists(lstm_path):
-            models['Lstm'] = load_model(lstm_path)
+        # Load LSTM (Only if TF is available)
+        if TENSORFLOW_AVAILABLE:
+            lstm_path = os.path.join(models_dir, 'lstm_model.h5')
+            if os.path.exists(lstm_path):
+                models['Lstm'] = load_model(lstm_path)
             
+        # Load Scaler
         scaler_path = os.path.join(models_dir, 'scaler.joblib')
         if os.path.exists(scaler_path):
             scaler = joblib.load(scaler_path)
@@ -42,7 +52,7 @@ def load_all_models():
 
 models, scaler = load_all_models()
 
-# --- Header Section ---
+# --- UI Layout ---
 st.title(" AutoEye Heart AI Diagnostics")
 st.markdown("#### Professional Clinical Decision Support System | Developed by Asad Riaz")
 st.write("---")
@@ -50,7 +60,7 @@ st.write("---")
 # Sidebar
 st.sidebar.header("❤️ AutoEye Heart AI Diagnostics")
 if not models:
-    st.error("No models found! Please check the 'models/' folder.")
+    st.error("No models found! Please ensure your 'models/' folder is correctly uploaded.")
     st.stop()
 
 selected_model = st.sidebar.selectbox("Select ML Algorithm:", list(models.keys()))
@@ -79,7 +89,7 @@ with col3:
     ca = st.selectbox("Major Vessels (0-3)", [0, 1, 2, 3])
     thal = st.selectbox("Thalassemia", [0, 1, 2, 3])
 
-# Prediction Section
+# Prediction Logic
 st.write("---")
 if st.button("🚀 Analyze Patient Health"):
     features = np.array([[age, 1 if sex=="Male" else 0, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]])
@@ -89,7 +99,7 @@ if st.button("🚀 Analyze Patient Health"):
         
     model = models[selected_model]
     
-    if selected_model == 'Lstm':
+    if selected_model == 'Lstm' and TENSORFLOW_AVAILABLE:
         pred = (model.predict(features.reshape(1,1,13)) > 0.5).astype(int)[0][0]
     else:
         pred = model.predict(features)[0]
