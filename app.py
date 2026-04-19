@@ -4,7 +4,8 @@ import numpy as np
 import joblib
 import os
 
-# --- Conditional TensorFlow Import ---
+# --- Conditional TensorFlow Import (Safe Mode) ---
+TENSORFLOW_AVAILABLE = False
 try:
     from tensorflow.keras.models import load_model
     TENSORFLOW_AVAILABLE = True
@@ -37,7 +38,7 @@ def load_all_models():
                 name = filename.replace('.joblib', '').replace('_', ' ').title()
                 models[name] = joblib.load(os.path.join(models_dir, filename))
         
-        # Load LSTM (Only if TF is available)
+        # Load LSTM (Conditional Load)
         if TENSORFLOW_AVAILABLE:
             lstm_path = os.path.join(models_dir, 'lstm_model.h5')
             if os.path.exists(lstm_path):
@@ -53,14 +54,14 @@ def load_all_models():
 models, scaler = load_all_models()
 
 # --- UI Layout ---
-st.title(" AutoEye Heart AI Diagnostics")
+st.title("❤️ AutoEye Heart AI Diagnostics")
 st.markdown("#### Professional Clinical Decision Support System | Developed by Asad Riaz")
 st.write("---")
 
 # Sidebar
-st.sidebar.header("❤️ AutoEye Heart AI Diagnostics")
+st.sidebar.header("⚙️ Configuration")
 if not models:
-    st.error("No models found! Please ensure your 'models/' folder is correctly uploaded.")
+    st.error("No models found! Please ensure your 'models/' folder is uploaded.")
     st.stop()
 
 selected_model = st.sidebar.selectbox("Select ML Algorithm:", list(models.keys()))
@@ -99,6 +100,7 @@ if st.button("🚀 Analyze Patient Health"):
         
     model = models[selected_model]
     
+    # Prediction logic (Safe Mode)
     if selected_model == 'Lstm' and TENSORFLOW_AVAILABLE:
         pred = (model.predict(features.reshape(1,1,13)) > 0.5).astype(int)[0][0]
     else:
