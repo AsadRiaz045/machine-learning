@@ -1,15 +1,8 @@
 import streamlit as st
+import os
+import joblib
 import pandas as pd
 import numpy as np
-import joblib
-import os
-
-# --- Conditional TensorFlow Import ---
-try:
-    from tensorflow.keras.models import load_model
-    TENSORFLOW_AVAILABLE = True
-except ImportError:
-    TENSORFLOW_AVAILABLE = False
 
 # Page Configuration
 st.set_page_config(page_title="AutoEye Heart AI", page_icon="❤️", layout="wide")
@@ -31,18 +24,12 @@ def load_all_models():
     models_dir = 'models'
     
     if os.path.exists(models_dir):
-        # Load Scikit-Learn Models
+        # Load Scikit-Learn Models only
         for filename in os.listdir(models_dir):
             if filename.endswith('.joblib') and filename != 'scaler.joblib':
                 name = filename.replace('.joblib', '').replace('_', ' ').title()
                 models[name] = joblib.load(os.path.join(models_dir, filename))
         
-        # Load LSTM (Only if TF is available)
-        if TENSORFLOW_AVAILABLE:
-            lstm_path = os.path.join(models_dir, 'lstm_model.h5')
-            if os.path.exists(lstm_path):
-                models['Lstm'] = load_model(lstm_path)
-            
         # Load Scaler
         scaler_path = os.path.join(models_dir, 'scaler.joblib')
         if os.path.exists(scaler_path):
@@ -53,12 +40,12 @@ def load_all_models():
 models, scaler = load_all_models()
 
 # --- UI Layout ---
-st.title(" AutoEye Heart AI Diagnostics")
+st.title("❤️ AutoEye Heart AI Diagnostics")
 st.markdown("#### Professional Clinical Decision Support System | Developed by Asad Riaz")
 st.write("---")
 
 # Sidebar
-st.sidebar.header("❤️ AutoEye Heart AI Diagnostics")
+st.sidebar.header("⚙️ Configuration")
 if not models:
     st.error("No models found! Please ensure your 'models/' folder is correctly uploaded.")
     st.stop()
@@ -99,10 +86,8 @@ if st.button("🚀 Analyze Patient Health"):
         
     model = models[selected_model]
     
-    if selected_model == 'Lstm' and TENSORFLOW_AVAILABLE:
-        pred = (model.predict(features.reshape(1,1,13)) > 0.5).astype(int)[0][0]
-    else:
-        pred = model.predict(features)[0]
+    # Simple prediction for Scikit-Learn models
+    pred = model.predict(features)[0]
 
     if pred == 1:
         st.error("⚠️ HIGH RISK: Potential Heart Disease detected. Consult a Cardiologist immediately.")
