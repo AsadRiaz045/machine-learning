@@ -40,7 +40,7 @@ def load_all_models():
 models, scaler = load_all_models()
 
 # --- UI Layout ---
-st.title("❤️ AutoEye Heart AI Diagnostics")
+st.title(" AutoEye Heart AI Diagnostics")
 st.markdown("#### Professional Clinical Decision Support System | Developed by Asad Riaz")
 st.write("---")
 
