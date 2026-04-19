@@ -45,7 +45,7 @@ st.markdown("#### Professional Clinical Decision Support System | Developed by A
 st.write("---")
 
 # Sidebar
-st.sidebar.header("⚙️ Configuration")
+st.sidebar.header("❤️ AutoEye Heart AI Diagnostics")
 if not models:
     st.error("No models found! Please ensure your 'models/' folder is correctly uploaded.")
     st.stop()
